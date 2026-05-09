@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SpendSense</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* ===== BASE THEME VARS ===== */
+:root {
+  --bg:#faf7f2;--surface:#ffffff;--surface2:#f5f1ea;--border:#e8e0d0;
+  --text:#1a1612;--text-muted:#7a6e5f;--text-light:#b8a898;
+  --accent:#2d6a4f;--accent-light:#d8f3dc;--accent-mid:#52b788;
+  --red:#c1121f;--yellow:#e09f3e;--purple:#c77dff;--purple-light:#f3e8ff;
+  --shadow:0 2px 12px rgba(26,22,18,0.07);--shadow-lg:0 8px 32px rgba(26,22,18,0.10);
+  --radius:16px;--radius-sm:10px;
+}
+body.theme-pastel {
+  --bg:#fff0f6;--surface:#fff8fb;--surface2:#ffe8f2;--border:#f5c6dc;
+  --text:#2d1b26;--text-muted:#8a5a70;--text-light:#c99ab5;
+  --accent:#d63384;--accent-light:#ffe0ee;--accent-mid:#e879a0;
+  --red:#c1121f;--yellow:#e09f3e;--purple:#a855f7;--purple-light:#f3e8ff;
+  --shadow:0 2px 12px rgba(200,100,140,0.09);
+}
+body.theme-dark {
+  --bg:#111210;--surface:#1c1c1a;--surface2:#242422;--border:#333330;
+  --text:#f0ede8;--text-muted:#9a9488;--text-light:#5a5650;
+  --accent:#52b788;--accent-light:#1a3d2a;--accent-mid:#52b788;
+  --red:#f87171;--yellow:#fbbf24;--purple:#c77dff;--purple-light:#2d1a40;
+  --shadow:0 2px 12px rgba(0,0,0,0.35);
+}
+body.theme-dark-pastel {
+  --bg:#180e17;--surface:#241520;--surface2:#301a2a;--border:#4a2a3d;
+  --text:#f5e6f0;--text-muted:#c49ab5;--text-light:#7a4f68;
+  --accent:#e879a0;--accent-light:#3d1a2d;--accent-mid:#e879a0;
+  --red:#f87171;--yellow:#fbbf24;--purple:#d8a0ff;--purple-light:#2d1040;
+  --shadow:0 2px 12px rgba(0,0,0,0.45);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px;transition:background .3s,color .3s;}
+
+/* HEADER */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:15px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);transition:background .3s,border-color .3s;}
+.logo{font-family:'Fraunces',serif;font-size:1.4rem;color:var(--text);letter-spacing:-0.02em;}
+.logo span{color:var(--accent);font-style:italic;}
+.header-center{font-size:0.78rem;color:var(--text-muted);}
+.header-center strong{color:var(--text);}
+.header-right{display:flex;gap:8px;align-items:center;}
+
+.btn{padding:8px 14px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;border:none;transition:all .18s;}
+.btn-outline{background:none;border:1.5px solid var(--border);color:var(--text-muted);}
+.btn-outline:hover{border-color:var(--text-muted);color:var(--text);}
+.btn-score{background:var(--purple-light);color:var(--purple);border:1.5px solid var(--purple-light);}
+.btn-score:hover{opacity:.85;}
+.btn-settings{background:var(--surface2);border:1.5px solid var(--border);color:var(--text-muted);font-size:.95rem;padding:7px 12px;}
+.btn-settings:hover{color:var(--text);}
+
+/* MAIN */
+main{max-width:980px;margin:0 auto;padding:30px 22px;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:26px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:17px 19px;transition:transform .18s,background .3s,border-color .3s;}
+.stat-card:hover{transform:translateY(-2px);}
+.stat-label{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-light);margin-bottom:5px;}
+.stat-value{font-family:'Fraunces',serif;font-size:1.75rem;color:var(--text);line-height:1;}
+.stat-value.green{color:var(--accent);}
+.stat-value.red{color:var(--red);}
+.stat-sub{font-size:.68rem;color:var(--text-light);margin-top:4px;}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);transition:background .3s,border-color .3s;}
+.card-title{font-family:'Fraunces',serif;font-size:.98rem;margin-bottom:15px;color:var(--text);display:flex;align-items:center;gap:8px;}
+.card-title-icon{width:25px;height:25px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.82rem;flex-shrink:0;}
+
+.form-group{margin-bottom:10px;}
+.form-label{display:block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:5px;}
+.form-input,.form-select{width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:.83rem;color:var(--text);background:var(--surface);outline:none;transition:border-color .18s,background .3s;}
+.form-input:focus,.form-select:focus{border-color:var(--accent);}
+.form-input::placeholder{color:var(--text-light);}
+.form-select option{background:var(--surface);color:var(--text);}
+.btn-full{width:100%;padding:10px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:.83rem;font-weight:600;cursor:pointer;border:none;transition:all .18s;margin-top:4px;}
+.btn-full-accent{background:var(--accent);color:#fff;}
+.btn-full-accent:hover{filter:brightness(.88);}
+.btn-full-outline2{background:none;border:1.5px solid var(--border);color:var(--text-muted);}
+.btn-full-outline2:hover{border-color:var(--text-muted);color:var(--text);}
+
+/* TX LIST */
+.tx-list{display:flex;flex-direction:column;gap:5px;max-height:240px;overflow-y:auto;}
+.tx-item{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--surface2);border-radius:var(--radius-sm);animation:slideIn .2s ease;transition:background .3s;}
+@keyframes slideIn{from{opacity:0;transform:translateX(-7px)}to{opacity:1;transform:translateX(0)}}
+.tx-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.tx-goal{font-size:.77rem;font-weight:600;flex:1;}
+.tx-amount{font-family:'DM Mono',monospace;font-size:.77rem;}
+.tx-date{font-size:.63rem;color:var(--text-light);}
+.tx-empty{text-align:center;padding:26px;color:var(--text-light);font-size:.78rem;}
+
+/* SUMMARY */
+.summary-list{display:flex;flex-direction:column;gap:9px;}
+.summary-item{padding:11px 13px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);transition:background .3s;}
+.summary-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.summary-name{font-size:.8rem;font-weight:600;}
+.summary-amount{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--text-muted);}
+.summary-amount.over{color:var(--red);font-weight:600;}
+.progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+.summary-empty{text-align:center;padding:20px;color:var(--text-light);font-size:.78rem;}
+
+/* AI PANEL */
+.ai-panel{background:var(--purple-light);border:1px solid var(--purple);border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;display:none;transition:background .3s;}
+.ai-panel.show{display:block;}
+.ai-panel-header{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.ai-label{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--purple);}
+.ai-dot{width:5px;height:5px;border-radius:50%;background:var(--purple);animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.ai-text{font-size:.84rem;color:var(--text-muted);line-height:1.6;font-style:italic;}
+.ai-spinner{width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ROAST */
+.roast-popup{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1.5px solid var(--red);color:var(--red);padding:12px 17px;border-radius:var(--radius);font-weight:600;font-size:.83rem;box-shadow:var(--shadow-lg);z-index:999;max-width:280px;animation:popIn .35s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{opacity:0;transform:translateY(18px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* CHART */
+.chart-wrap{position:relative;height:200px;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.52);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-overlay.hidden{display:none;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:26px;width:100%;box-shadow:var(--shadow-lg);animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);transition:background .3s;}
+@keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+/* SCORE MODAL */
+.score-modal{max-width:360px;text-align:center;}
+.score-ring{font-family:'Fraunces',serif;font-size:3.8rem;line-height:1;margin:12px 0 5px;}
+.score-verdict{font-family:'Fraunces',serif;font-size:1.05rem;margin-bottom:9px;}
+.score-ai-text{font-size:.8rem;color:var(--text-muted);line-height:1.6;margin-bottom:16px;font-style:italic;}
+.ai-loading-row{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--text-muted);font-size:.8rem;margin-bottom:16px;}
+.modal-eyebrow{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-light);}
+
+/* SETTINGS MODAL */
+.settings-modal{max-width:500px;}
+.settings-title{font-family:'Fraunces',serif;font-size:1.35rem;margin-bottom:3px;}
+.settings-sub{font-size:.76rem;color:var(--text-muted);margin-bottom:20px;}
+.settings-section{margin-bottom:20px;}
+.settings-section-label{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-light);margin-bottom:9px;}
+
+/* THEME GRID */
+.theme-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;}
+.theme-option{border:2px solid var(--border);border-radius:var(--radius-sm);padding:11px;cursor:pointer;transition:all .15s;text-align:center;background:none;font-family:'DM Sans',sans-serif;color:var(--text-muted);width:100%;}
+.theme-option:hover{border-color:var(--accent);}
+.theme-option.selected{border-color:var(--accent);background:var(--accent-light);color:var(--text);}
+.theme-preview{height:34px;border-radius:6px;margin-bottom:6px;display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.theme-name{font-size:.73rem;font-weight:600;}
+.theme-desc{font-size:.62rem;color:var(--text-light);margin-top:2px;}
+
+/* CURRENCY GRID */
+.currency-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.currency-option{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 8px;cursor:pointer;transition:all .15s;text-align:center;background:none;font-family:'DM Mono',monospace;font-size:.76rem;color:var(--text-muted);width:100%;}
+.currency-option:hover{border-color:var(--accent);}
+.currency-option.selected{border-color:var(--accent);background:var(--accent-light);color:var(--text);font-weight:600;}
+.currency-symbol{font-size:1.05rem;display:block;margin-bottom:2px;}
+.currency-name{font-size:.58rem;color:var(--text-light);}
+.settings-actions{display:flex;gap:9px;margin-top:4px;}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+</style>
+</head>
+<body class="theme-default">
+
+<header>
+  <div class="logo">Spend<span>Sense</span></div>
+  <div class="header-center" id="header-greeting"></div>
+  <div class="header-right">
+    <button class="btn btn-score" onclick="openScoreModal()">✦ AI Health Score</button>
+    <button class="btn btn-settings" onclick="openSettings()" title="Settings">⚙️</button>
+  </div>
+</header>
+
+<main>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Total Spent</div><div class="stat-value" id="stat-total-spent">—</div><div class="stat-sub">this month</div></div>
+    <div class="stat-card"><div class="stat-label">Total Budget</div><div class="stat-value green" id="stat-total-budget">—</div><div class="stat-sub">all goals</div></div>
+    <div class="stat-card"><div class="stat-label">Over Limit</div><div class="stat-value red" id="stat-over">0</div><div class="stat-sub">need attention</div></div>
+    <div class="stat-card"><div class="stat-label">Transactions</div><div class="stat-value" id="stat-tx-count">0</div><div class="stat-sub">logged</div></div>
+  </div>
+
+  <div class="ai-panel" id="ai-panel">
+    <div class="ai-panel-header"><div class="ai-dot"></div><div class="ai-label">AI Feedback</div></div>
+    <div class="ai-text" id="ai-panel-text"></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><div class="card-title-icon" style="background:var(--accent-light)">🎯</div>Create Spending Goal</div>
+      <div class="form-group"><label class="form-label">Goal Name</label><input class="form-input" id="goalName" placeholder="Food, Makeup, Hobbies..."/></div>
+      <div class="form-group"><label class="form-label">Monthly Limit (<span class="cur-code"></span>)</label><input class="form-input" type="number" id="goalLimit" placeholder="e.g. 100"/></div>
+      <button class="btn-full btn-full-accent" onclick="addGoal()">+ Add Goal</button>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="card-title-icon" style="background:#fff3cd">💸</div>Add Transaction</div>
+      <div class="form-group"><label class="form-label">Spending Goal</label><select class="form-select" id="goalSelect"><option value="">— select a goal —</option></select></div>
+      <div class="form-group"><label class="form-label">Amount (<span class="cur-code"></span>)</label><input class="form-input" type="number" id="amount" placeholder="e.g. 25"/></div>
+      <button class="btn-full btn-full-accent" onclick="addTransaction()">Log Transaction</button>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title"><div class="card-title-icon" style="background:#ffe5e7">📊</div>Spending Chart</div>
+      <div class="chart-wrap"><canvas id="spendingChart"></canvas></div>
+      <div id="chart-empty" style="text-align:center;color:var(--text-light);font-size:.77rem;padding:14px 0;">Add goals to see chart</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="card-title-icon" style="background:var(--purple-light)">📋</div>Monthly Summary</div>
+      <div class="summary-list" id="summaryBoard"><div class="summary-empty">No goals yet.</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="card-title-icon" style="background:var(--accent-light)">🕒</div>Transaction History</div>
+      <div class="tx-list" id="transactionList"><div class="tx-empty">No transactions yet.</div></div>
+    </div>
+  </div>
+</main>
+
+<!-- SCORE MODAL -->
+<div class="modal-overlay hidden" id="score-modal">
+  <div class="modal score-modal">
+    <div class="modal-eyebrow">AI Financial Health Score</div>
+    <div class="score-ring" id="score-number">—</div>
+    <div style="font-size:.68rem;color:var(--text-light);margin-bottom:5px;">out of 100</div>
+    <div class="score-verdict" id="score-verdict"></div>
+    <div id="score-ai-wrap"><div class="ai-loading-row"><div class="ai-spinner"></div> Analysing...</div></div>
+    <button class="btn-full btn-full-outline2" onclick="document.getElementById('score-modal').classList.add('hidden')">Close</button>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay hidden" id="settings-modal">
+  <div class="modal settings-modal">
+    <div class="settings-title">Settings</div>
+    <div class="settings-sub">Personalise SpendSense to match your life.</div>
+
+    <div class="settings-section">
+      <div class="settings-section-label">Your Name</div>
+      <input class="form-input" id="settings-username" placeholder="e.g. Adrija"/>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-label">Theme</div>
+      <div class="theme-grid">
+        <button class="theme-option" data-theme="theme-default" onclick="selectTheme(this)">
+          <div class="theme-preview" style="background:linear-gradient(135deg,#faf7f2,#e8e0d0)">☀️</div>
+          <div class="theme-name">Classic Light</div><div class="theme-desc">Warm & neutral</div>
+        </button>
+        <button class="theme-option" data-theme="theme-pastel" onclick="selectTheme(this)">
+          <div class="theme-preview" style="background:linear-gradient(135deg,#fff0f6,#f5c6dc)">🌸</div>
+          <div class="theme-name">Pastel Pink</div><div class="theme-desc">Soft & dreamy</div>
+        </button>
+        <button class="theme-option" data-theme="theme-dark" onclick="selectTheme(this)">
+          <div class="theme-preview" style="background:linear-gradient(135deg,#111210,#242422)">🌙</div>
+          <div class="theme-name">Dark Mode</div><div class="theme-desc">Easy on eyes</div>
+        </button>
+        <button class="theme-option" data-theme="theme-dark-pastel" onclick="selectTheme(this)">
+          <div class="theme-preview" style="background:linear-gradient(135deg,#180e17,#4a2a3d)">🌙🌸</div>
+          <div class="theme-name">Dark Pastel</div><div class="theme-desc">Moody & soft</div>
+        </button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-label">Currency</div>
+      <div class="currency-grid">
+        <button class="currency-option" data-sym="$"  data-code="USD" onclick="selectCurrency(this)"><span class="currency-symbol">$</span><span class="currency-name">USD · Dollar</span></button>
+        <button class="currency-option" data-sym="₩"  data-code="KRW" onclick="selectCurrency(this)"><span class="currency-symbol">₩</span><span class="currency-name">KRW · Won</span></button>
+        <button class="currency-option" data-sym="₹"  data-code="INR" onclick="selectCurrency(this)"><span class="currency-symbol">₹</span><span class="currency-name">INR · Rupee</span></button>
+        <button class="currency-option" data-sym="€"  data-code="EUR" onclick="selectCurrency(this)"><span class="currency-symbol">€</span><span class="currency-name">EUR · Euro</span></button>
+        <button class="currency-option" data-sym="£"  data-code="GBP" onclick="selectCurrency(this)"><span class="currency-symbol">£</span><span class="currency-name">GBP · Pound</span></button>
+        <button class="currency-option" data-sym="¥"  data-code="JPY" onclick="selectCurrency(this)"><span class="currency-symbol">¥</span><span class="currency-name">JPY · Yen</span></button>
+        <button class="currency-option" data-sym="A$" data-code="AUD" onclick="selectCurrency(this)"><span class="currency-symbol">A$</span><span class="currency-name">AUD · A. Dollar</span></button>
+        <button class="currency-option" data-sym="C$" data-code="CAD" onclick="selectCurrency(this)"><span class="currency-symbol">C$</span><span class="currency-name">CAD · C. Dollar</span></button>
+        <button class="currency-option" data-sym="Fr" data-code="CHF" onclick="selectCurrency(this)"><span class="currency-symbol">Fr</span><span class="currency-name">CHF · Franc</span></button>
+      </div>
+    </div>
+
+    <div class="settings-actions">
+      <button class="btn-full btn-full-outline2" style="flex:1" onclick="closeSettings()">Cancel</button>
+      <button class="btn-full btn-full-accent" style="flex:2" onclick="saveSettings()">Save Settings ✦</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== SETTINGS =====
+let S = JSON.parse(localStorage.getItem('ss_settings')||'{}');
+S.theme = S.theme||'theme-default';
+S.sym   = S.sym||'$';
+S.code  = S.code||'USD';
+S.name  = S.name||'';
+let pTheme=S.theme, pSym=S.sym, pCode=S.code;
+
+// ===== DATA =====
+let goals = JSON.parse(localStorage.getItem('ss_goals')||'[]');
+let txns  = JSON.parse(localStorage.getItem('ss_txns')||'[]');
+let chart = null;
+const COLORS=['#52b788','#c77dff','#f4a261','#4cc9f0','#f72585','#7b2d8b','#2d6a4f','#e09f3e'];
+
+function save(){localStorage.setItem('ss_goals',JSON.stringify(goals));localStorage.setItem('ss_txns',JSON.stringify(txns));}
+function saveS(){localStorage.setItem('ss_settings',JSON.stringify(S));}
+
+function fmt(n){
+  if(['₩','¥'].includes(S.sym)) return S.sym+Math.round(n).toLocaleString();
+  return S.sym+n.toFixed(2);
+}
+
+function applySettings(){
+  document.body.className=S.theme;
+  document.querySelectorAll('.cur-code').forEach(el=>el.textContent=S.code);
+  const g=document.getElementById('header-greeting');
+  g.innerHTML = S.name ? `Hey, <strong>${S.name}</strong> 👋` : '';
+}
+
+window.onload=function(){
+  applySettings(); rebuildSelect(); renderAll();
+  if(!S.name && !goals.length) setTimeout(openSettings,500);
+};
+
+function renderAll(){updateStats();renderSummary();renderTxns();updateChart();}
+
+// GOAL
+function addGoal(){
+  const name=document.getElementById('goalName').value.trim();
+  const limit=parseFloat(document.getElementById('goalLimit').value);
+  if(!name||!limit||limit<=0){toast('Enter a valid name and limit!');return;}
+  if(goals.find(g=>g.name.toLowerCase()===name.toLowerCase())){toast('Goal already exists!');return;}
+  goals.push({name,limit,spent:0,color:COLORS[goals.length%COLORS.length]});
+  document.getElementById('goalName').value='';
+  document.getElementById('goalLimit').value='';
+  save();rebuildSelect();renderAll();
+  toast(`✦ "${name}" goal created`);
+}
+
+// TRANSACTION
+async function addTransaction(){
+  const gn=document.getElementById('goalSelect').value;
+  const amt=parseFloat(document.getElementById('amount').value);
+  if(!gn){toast('Select a goal!');return;}
+  if(!amt||amt<=0){toast('Enter a valid amount!');return;}
+  const goal=goals.find(g=>g.name===gn);
+  goal.spent+=amt;
+  txns.unshift({goal:gn,amount:amt,date:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),color:goal.color});
+  document.getElementById('amount').value='';
+  save();renderAll();
+  if(goal.spent>goal.limit) await doRoast(goal);
+}
+
+// AI ROAST
+async function doRoast(goal){
+  const pct=Math.round((goal.spent/goal.limit)*100);
+  const panel=document.getElementById('ai-panel');
+  const pt=document.getElementById('ai-panel-text');
+  panel.classList.add('show');
+  pt.innerHTML='<span class="ai-spinner"></span> crafting your reality check...';
+  showRoastPopup('💸 Over budget...');
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:120,
+        messages:[{role:'user',content:`You are SpendSense, a brutally funny but caring finance AI. The user${S.name?' named '+S.name:''} exceeded their "${goal.name}" budget. Limit: ${fmt(goal.limit)}, spent: ${fmt(goal.spent)} (${pct}%), currency: ${S.code}. Write ONE short roast/reality-check (2-3 sentences, under 80 words). Witty, category-specific, dramatic, end with a tiny genuine tip. No hashtags. No emojis. Second person "you".`}]})});
+    const d=await r.json();
+    const t=d.content?.find(b=>b.type==='text')?.text||'';
+    if(t){pt.textContent=t;showRoastPopup(t.split('.')[0]+'.');}
+    else fbRoast(pt);
+  }catch(e){fbRoast(pt);}
+}
+const FB=['Financial discipline has left the chat.','Your wallet is on life support.','You speedran bankruptcy.','Did you budget, or just vibe?','Your bank account is not okay.'];
+function fbRoast(el){const r=FB[Math.floor(Math.random()*FB.length)];el.textContent=r;showRoastPopup(r);}
+function showRoastPopup(msg){
+  document.querySelectorAll('.roast-popup').forEach(p=>p.remove());
+  const p=document.createElement('div');p.className='roast-popup';
+  p.textContent=msg.length>90?msg.slice(0,90)+'…':msg;
+  document.body.appendChild(p);setTimeout(()=>p.remove(),4200);
+}
+
+// AI SCORE
+async function openScoreModal(){
+  if(!goals.length){toast('Add goals first!');return;}
+  document.getElementById('score-modal').classList.remove('hidden');
+  const ts=goals.reduce((a,g)=>a+g.spent,0);
+  const tl=goals.reduce((a,g)=>a+g.limit,0);
+  const score=Math.min(100,Math.max(0,Math.round(100-(ts/tl)*100)));
+  document.getElementById('score-number').textContent=score;
+  document.getElementById('score-number').style.color=score>=70?'var(--accent)':score>=40?'var(--yellow)':'var(--red)';
+  document.getElementById('score-verdict').textContent=score>=70?'Financially Responsible 🌿':score>=50?'Doing Alright 🌤':score>=30?'Getting Risky ⚡':'Send Help 🆘';
+  const wrap=document.getElementById('score-ai-wrap');
+  wrap.innerHTML='<div class="ai-loading-row"><div class="ai-spinner"></div> Analysing your spending...</div>';
+  try{
+    const og=goals.filter(g=>g.spent>g.limit).map(g=>g.name).join(', ');
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:160,
+        messages:[{role:'user',content:`You are SpendSense. Score: ${score}/100. User${S.name?' ('+S.name+')':''} spent ${fmt(ts)} of ${fmt(tl)}. Currency: ${S.code}. Over limit: ${og||'none'}. Write 2-3 sentence personalised financial summary — honest, slightly funny if low, encouraging if high. One concrete actionable tip. Under 100 words. No hashtags.`}]})});
+    const d=await r.json();
+    const t=d.content?.find(b=>b.type==='text')?.text||'';
+    wrap.innerHTML=`<div class="score-ai-text">${t||'Keep tracking consistently!'}</div>`;
+  }catch(e){wrap.innerHTML='<div class="score-ai-text">Track consistently and review weekly — small habits compound fast.</div>';}
+}
+
+// SETTINGS
+function openSettings(){
+  pTheme=S.theme;pSym=S.sym;pCode=S.code;
+  document.getElementById('settings-username').value=S.name;
+  document.querySelectorAll('.theme-option').forEach(b=>b.classList.toggle('selected',b.dataset.theme===pTheme));
+  document.querySelectorAll('.currency-option').forEach(b=>b.classList.toggle('selected',b.dataset.sym===pSym));
+  document.getElementById('settings-modal').classList.remove('hidden');
+}
+function closeSettings(){
+  document.getElementById('settings-modal').classList.add('hidden');
+  document.body.className=S.theme; // revert preview
+}
+function selectTheme(el){
+  document.querySelectorAll('.theme-option').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');pTheme=el.dataset.theme;
+  document.body.className=pTheme; // live preview
+}
+function selectCurrency(el){
+  document.querySelectorAll('.currency-option').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');pSym=el.dataset.sym;pCode=el.dataset.code;
+}
+function saveSettings(){
+  S.theme=pTheme;S.sym=pSym;S.code=pCode;
+  S.name=document.getElementById('settings-username').value.trim();
+  saveS();applySettings();renderAll();
+  document.getElementById('settings-modal').classList.add('hidden');
+  toast('✦ Settings saved!');
+}
+
+// RENDER SUMMARY
+function renderSummary(){
+  const b=document.getElementById('summaryBoard');
+  if(!goals.length){b.innerHTML='<div class="summary-empty">No goals yet. Create one!</div>';return;}
+  b.innerHTML=goals.map(g=>{
+    const pct=Math.min(100,g.limit>0?(g.spent/g.limit)*100:0);
+    const over=g.spent>g.limit;
+    return`<div class="summary-item"><div class="summary-row"><span class="summary-name">${g.name}</span><span class="summary-amount ${over?'over':''}">${fmt(g.spent)} / ${fmt(g.limit)}</span></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${over?'var(--red)':g.color}"></div></div></div>`;
+  }).join('');
+}
+
+// RENDER TXNs
+function renderTxns(){
+  const l=document.getElementById('transactionList');
+  if(!txns.length){l.innerHTML='<div class="tx-empty">No transactions yet.</div>';return;}
+  l.innerHTML=txns.slice(0,30).map(t=>`<div class="tx-item"><div class="tx-dot" style="background:${t.color||'var(--accent)'}"></div><span class="tx-goal">${t.goal}</span><span class="tx-amount">${fmt(t.amount)}</span><span class="tx-date">${t.date}</span></div>`).join('');
+}
+
+// STATS
+function updateStats(){
+  const ts=goals.reduce((a,g)=>a+g.spent,0);
+  const tl=goals.reduce((a,g)=>a+g.limit,0);
+  const over=goals.filter(g=>g.spent>g.limit).length;
+  document.getElementById('stat-total-spent').textContent=goals.length?fmt(ts):'—';
+  document.getElementById('stat-total-budget').textContent=goals.length?fmt(tl):'—';
+  document.getElementById('stat-over').textContent=over;
+  document.getElementById('stat-tx-count').textContent=txns.length;
+}
+
+// CHART
+function updateChart(){
+  const ctx=document.getElementById('spendingChart');
+  const empty=document.getElementById('chart-empty');
+  const hasData=goals.some(g=>g.spent>0);
+  if(chart)chart.destroy();
+  if(!goals.length||!hasData){ctx.style.display='none';empty.style.display='block';return;}
+  ctx.style.display='block';empty.style.display='none';
+  const dark=S.theme.includes('dark');
+  chart=new Chart(ctx,{type:'doughnut',data:{labels:goals.map(g=>g.name),datasets:[{data:goals.map(g=>g.spent),backgroundColor:goals.map(g=>g.color),borderWidth:2,borderColor:dark?'#1c1c1a':'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:10},color:dark?'#9a9488':'#7a6e5f',padding:9,boxWidth:8,boxHeight:8}}}}});
+}
+
+// REBUILD SELECT
+function rebuildSelect(){
+  const s=document.getElementById('goalSelect');
+  s.innerHTML='<option value="">— select a goal —</option>';
+  goals.forEach(g=>{const o=document.createElement('option');o.value=g.name;o.textContent=g.name;s.appendChild(o);});
+}
+
+// TOAST
+function toast(msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:9px 17px;border-radius:8px;font-size:.79rem;font-weight:600;z-index:9999;white-space:nowrap;animation:popIn .3s ease;';
+  t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);
+}
+
+// CLOSE ON OUTSIDE CLICK
+['score-modal','settings-modal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{
+    if(e.target.id===id){if(id==='settings-modal')closeSettings();else document.getElementById(id).classList.add('hidden');}
+  });
+});
+</script>
+</body>
+</html>
